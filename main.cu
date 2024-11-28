@@ -73,7 +73,7 @@ int main()
 
     cudaMalloc(&matrix, rows * cols * sizeof(int));
     cudaMalloc(&searchVector, cols * sizeof(int));
-    cudaMallocManaged(&minDistance, sizeof(double));
+    cudaMallocManaged(&minDistance, sizeof(int));
     cudaMalloc(&tempMatrix, rows * sizeof(int));
 
     *minDistance = 2147483647;
