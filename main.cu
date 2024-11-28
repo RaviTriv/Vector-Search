@@ -25,7 +25,7 @@ __global__ void setupMatrix(int *matrix, int *searchVector, int *tempMatrix, int
     }
 }
 
-__global__ void searchMatrix(int *matrix, int rows, int cols, int blocks, int *minDistance, int *searchVector)
+__global__ void findVectorDif(int *matrix, int rows, int cols, int blocks, int *minDistance, int *searchVector)
 {
     for (int i = blockIdx.x; i < rows; i += blocks)
     {
@@ -36,7 +36,7 @@ __global__ void searchMatrix(int *matrix, int rows, int cols, int blocks, int *m
     }
 }
 
-__global__ void sMatrix(int *matrix, int *tempMatrix, int rows, int cols, int blocks)
+__global__ void sumDif(int *matrix, int *tempMatrix, int rows, int cols, int blocks)
 {
     for (int i = blockIdx.x; i < rows; i += blocks)
     {
@@ -47,7 +47,7 @@ __global__ void sMatrix(int *matrix, int *tempMatrix, int rows, int cols, int bl
     }
 }
 
-__global__ void closestVector(int rows, int blocks, int *minDistance, int *idx, int *tempMatrix)
+__global__ void findClosestVector(int rows, int blocks, int *minDistance, int *idx, int *tempMatrix)
 {
     for (int i = blockIdx.x; i < rows; i += blocks)
     {
@@ -84,16 +84,14 @@ int main()
     int blocks = 10000;
     setupMatrix<<<blocks, cols>>>(matrix, searchVector, tempMatrix, rows, cols, blocks);
     cudaDeviceSynchronize();
-
-    searchMatrix<<<blocks, cols>>>(matrix, rows, cols, blocks, minDistance, searchVector);
+    findVectorDif<<<blocks, cols>>>(matrix, rows, cols, blocks, minDistance, searchVector);
     cudaDeviceSynchronize();
-
-    sMatrix<<<blocks, 1>>>(matrix, tempMatrix, rows, cols, blocks);
+    sumDif<<<blocks, 1>>>(matrix, tempMatrix, rows, cols, blocks);
     cudaDeviceSynchronize();
 
     cudaFree(matrix);
     cudaMallocManaged(&idx, sizeof(int));
-    closestVector<<<blocks, 1>>>(rows, blocks, minDistance, idx, tempMatrix);
+    findClosestVector<<<blocks, 1>>>(rows, blocks, minDistance, idx, tempMatrix);
     cudaDeviceSynchronize();
 
     cudaFree(searchVector);
