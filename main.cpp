@@ -25,7 +25,7 @@ int main()
     {
         for (int j = 0; j < cols; j++)
         {
-            if (i == 21)
+            if (i == 5021)
             {
                 *(matrix + i * cols + j) = 4;
                 *(searchVector + j) = 2;

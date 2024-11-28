@@ -11,7 +11,7 @@ __global__ void setupMatrix(int *matrix, int *searchVector, int *tempMatrix, int
     {
         for (int j = threadIdx.x; j < cols; j += cols)
         {
-            if (i == 21)
+            if (i == 5021)
             {
                 matrix[i * cols + j] = 4;
                 searchVector[j] = 2;
@@ -25,7 +25,7 @@ __global__ void setupMatrix(int *matrix, int *searchVector, int *tempMatrix, int
     }
 }
 
-__global__ void searchMatrix(int *matrix, int rows, int cols, int blocks, double *min, int *idx, int *searchVector)
+__global__ void searchMatrix(int *matrix, int rows, int cols, int blocks, int *min, int *idx, int *searchVector)
 {
     for (int i = blockIdx.x; i < rows; i += blocks)
     {
@@ -47,13 +47,13 @@ __global__ void sMatrix(int *matrix, int *tempMatrix, int rows, int cols, int bl
     }
 }
 
-__global__ void closestVector(int rows, int blocks, double *min, int *idx, int *tempMatrix)
+__global__ void closestVector(int rows, int blocks, int *min, int *idx, int *tempMatrix)
 {
     for (int i = blockIdx.x; i < rows; i += blocks)
     {
-        if (sqrt(tempMatrix[i]) < *min)
+        if ((int)sqrt(tempMatrix[i]) < *min)
         {
-            *min = sqrt(tempMatrix[i]);
+            *min = (int)sqrt(tempMatrix[i]);
             *idx = i;
         };
     }
@@ -66,7 +66,7 @@ int main()
     int *matrix;
     int *tempMatrix;
     int *searchVector;
-    double *min;
+    int *min;
     int *idx;
     int rows = 1 << 20 << 5;
     int cols = 50;
@@ -77,7 +77,7 @@ int main()
     cudaMallocManaged(&idx, sizeof(int));
     cudaMalloc(&tempMatrix, rows * sizeof(int));
 
-    *min = 21.0;
+    *min = 2147483647;
     printf("GPU\n");
     printf("ROWS: %d\n", rows);
     printf("COLUMNS: %d\n", cols);
