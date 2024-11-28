@@ -5,7 +5,7 @@
 
 double time1, timedif;
 
-__global__ void setupMatrix(int *matrix, int *searchVector, int *sqrtMatrix, int rows, int cols, int blocks)
+__global__ void setupMatrix(int *matrix, int *searchVector, int *tempMatrix, int rows, int cols, int blocks)
 {
     for (int i = blockIdx.x; i < rows; i += blocks)
     {
@@ -21,7 +21,7 @@ __global__ void setupMatrix(int *matrix, int *searchVector, int *sqrtMatrix, int
                 matrix[i * cols + j] = j + 2;
             }
         }
-        sqrtMatrix[i] = 0;
+        tempMatrix[i] = 0;
     }
 }
 
@@ -36,24 +36,24 @@ __global__ void searchMatrix(int *matrix, int rows, int cols, int blocks, double
     }
 }
 
-__global__ void sMatrix(int *matrix, int *sqrtMatrix, int rows, int cols, int blocks)
+__global__ void sMatrix(int *matrix, int *tempMatrix, int rows, int cols, int blocks)
 {
     for (int i = blockIdx.x; i < rows; i += blocks)
     {
         for (int j = 0; j < cols; j++)
         {
-            sqrtMatrix[i] = sqrtMatrix[i] + matrix[i * cols + j];
+            tempMatrix[i] = tempMatrix[i] + matrix[i * cols + j];
         }
     }
 }
 
-__global__ void closestVector(int rows, int blocks, double *min, int *idx, int *sqrtMatrix)
+__global__ void closestVector(int rows, int blocks, double *min, int *idx, int *tempMatrix)
 {
     for (int i = blockIdx.x; i < rows; i += blocks)
     {
-        if (sqrt(sqrtMatrix[i]) < *min)
+        if (sqrt(tempMatrix[i]) < *min)
         {
-            *min = sqrt(sqrtMatrix[i]);
+            *min = sqrt(tempMatrix[i]);
             *idx = i;
         };
     }
@@ -64,7 +64,7 @@ int main()
     time1 = (double)clock();
     time1 = time1 / CLOCKS_PER_SEC;
     int *matrix;
-    int *sqrtMatrix;
+    int *tempMatrix;
     int *searchVector;
     double *min;
     int *idx;
@@ -75,7 +75,7 @@ int main()
     cudaMallocManaged(&searchVector, cols * sizeof(int));
     cudaMallocManaged(&min, sizeof(double));
     cudaMallocManaged(&idx, sizeof(int));
-    cudaMalloc(&sqrtMatrix, rows * sizeof(int));
+    cudaMalloc(&tempMatrix, rows * sizeof(int));
 
     *min = 21.0;
     printf("GPU\n");
@@ -83,20 +83,20 @@ int main()
     printf("COLUMNS: %d\n", cols);
 
     int blocks = 10000;
-    setupMatrix<<<blocks, cols>>>(matrix, searchVector, sqrtMatrix, rows, cols, blocks);
+    setupMatrix<<<blocks, cols>>>(matrix, searchVector, tempMatrix, rows, cols, blocks);
     cudaDeviceSynchronize();
 
     searchMatrix<<<blocks, cols>>>(matrix, rows, cols, blocks, min, idx, searchVector);
     cudaDeviceSynchronize();
 
-    sMatrix<<<blocks, 1>>>(matrix, sqrtMatrix, rows, cols, blocks);
+    sMatrix<<<blocks, 1>>>(matrix, tempMatrix, rows, cols, blocks);
     cudaDeviceSynchronize();
 
-    closestVector<<<blocks, 1>>>(rows, blocks, min, idx, sqrtMatrix);
+    closestVector<<<blocks, 1>>>(rows, blocks, min, idx, tempMatrix);
     cudaDeviceSynchronize();
 
     cudaFree(searchVector);
-    cudaFree(sqrtMatrix);
+    cudaFree(tempMatrix);
     cudaFree(min);
 
     printf("NEAREST VECTOR INDEX: %d\n", *idx);
