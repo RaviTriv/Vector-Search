@@ -5,15 +5,7 @@
 
 double time1, timedif;
 
-__global__ void setupVector(int *searchVector, int M)
-{
-    for (int j = threadIdx.x; j < M; j += M)
-    {
-        searchVector[j] = 2;
-    }
-}
-
-__global__ void setupMatrix(int *matrix, int rows, int M, int blocks)
+__global__ void setupMatrix(int *matrix, int *searchVector, int rows, int M, int blocks)
 {
     for (int i = blockIdx.x; i < rows; i += blocks)
     {
@@ -22,6 +14,7 @@ __global__ void setupMatrix(int *matrix, int rows, int M, int blocks)
             if (i == 21)
             {
                 matrix[i * M + j] = 4;
+                searchVector[j] = 2;
             }
             else
             {
@@ -95,11 +88,9 @@ int main()
     printf("ROWS: %d\n", rows);
     printf("COLUMNS: %d\n", M);
 
-    setupVector<<<1, M>>>(searchVector, M);
-    cudaDeviceSynchronize();
 
     int blocks = 10000;
-    setupMatrix<<<blocks, M>>>(matrix, rows, M, blocks);
+    setupMatrix<<<blocks, M>>>(matrix, searchVector, rows, M, blocks);
     cudaDeviceSynchronize();
 
     searchMatrix<<<blocks, M>>>(matrix, rows, M, blocks, min, idx, searchVector);
