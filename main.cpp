@@ -53,8 +53,8 @@ int main()
     }
 
     printf("NEAREST VECTOR INDEX: %d\n", idx);
-    delete matrix;
-    delete searchVector;
+    delete[] matrix;
+    delete[] searchVector;
     timedif = (((double)clock()) / CLOCKS_PER_SEC) - time1;
     printf("TIME TAKEN: %f\n", timedif);
 }
